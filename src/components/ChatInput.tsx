@@ -5,13 +5,14 @@ import { Textarea } from "@/components/ui/textarea";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
+  disabled?: boolean;
 }
 
-export function ChatInput({ onSend }: ChatInputProps) {
+export function ChatInput({ onSend, disabled }: ChatInputProps) {
   const [message, setMessage] = useState("");
 
   const handleSend = () => {
-    if (message.trim()) {
+    if (message.trim() && !disabled) {
       onSend(message);
       setMessage("");
     }
@@ -33,8 +34,13 @@ export function ChatInput({ onSend }: ChatInputProps) {
           onKeyDown={handleKeyDown}
           placeholder="Digite sua mensagem..."
           className="min-h-[60px] resize-none"
+          disabled={disabled}
         />
-        <Button onClick={handleSend} className="px-3">
+        <Button 
+          onClick={handleSend} 
+          className="px-3"
+          disabled={disabled}
+        >
           <Send className="h-4 w-4" />
         </Button>
       </div>
