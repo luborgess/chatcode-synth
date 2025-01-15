@@ -3,6 +3,7 @@ import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import { sendMessage } from "../services/deepseek";
 import { useToast } from "@/hooks/use-toast";
+import { useSandpack } from "@codesandbox/sandpack-react";
 
 interface Message {
   id: number;
@@ -22,6 +23,29 @@ export function Chat() {
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { sandpack } = useSandpack();
+
+  const processCodeBlocks = (content: string) => {
+    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+    let match;
+    
+    while ((match = codeBlockRegex.exec(content)) !== null) {
+      const language = match[1] || 'javascript';
+      const code = match[2].trim();
+      
+      console.log('Código detectado:', { language, code });
+      
+      // Atualiza o código no editor
+      if (language.toLowerCase().includes('typescript') || 
+          language.toLowerCase().includes('javascript') ||
+          language.toLowerCase().includes('tsx') ||
+          language.toLowerCase().includes('jsx')) {
+        sandpack.updateFile("/App.tsx", code);
+      }
+    }
+    
+    return content;
+  };
 
   const handleSend = async (content: string) => {
     try {
@@ -48,10 +72,14 @@ export function Chat() {
 
       // Adiciona resposta do assistente
       if (response) {
+        const assistantContent = response.content;
+        // Processa blocos de código antes de adicionar a mensagem
+        processCodeBlocks(assistantContent);
+        
         setMessages(prev => [...prev, {
           id: Date.now(),
           type: "assistant",
-          content: response.content,
+          content: assistantContent,
           timestamp: new Date(),
         }]);
       }
